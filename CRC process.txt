@@ -1,0 +1,73 @@
+CRC process:
+#include <stdio.h>
+#include <string.h>
+
+#define POLYNOMIAL 0x9
+#define DATA_BITS 7
+void crcDivide(int data[], int divisor[], int data_len, int divisor_len) {
+    for (int i = 0; i <= data_len - divisor_len; i++) {
+        if (data[i] == 1) {
+            for (int j = 0; j < divisor_len; j++) {
+                data[i + j] = data[i + j] ^ divisor[j];
+            }
+        }
+    }
+}
+void crcEncode(int data[], int divisor[], int data_len, int divisor_len) {
+    int total_len = data_len + divisor_len - 1;
+    int encoded_data[total_len];
+    for (int i = 0; i < data_len; i++) {
+        encoded_data[i] = data[i];
+    }
+    for (int i = data_len; i < total_len; i++) {
+        encoded_data[i] = 0;
+    }
+    crcDivide(encoded_data, divisor, total_len, divisor_len);
+    printf("Codeword (Data + CRC): ");
+    for (int i = 0; i < data_len; i++) {
+        printf("%d", data[i]);
+    }
+    for (int i = data_len; i < total_len; i++) {
+        printf("%d", encoded_data[i]);
+    }
+    printf("\n");
+}
+void crcDecode(int codeword[], int divisor[], int codeword_len, int divisor_len) {
+    int remainder[codeword_len];
+
+    for (int i = 0; i < codeword_len; i++) {
+        remainder[i] = codeword[i];
+    }
+    crcDivide(remainder, divisor, codeword_len, divisor_len);
+    int error_detected = 0;
+    for (int i = codeword_len - divisor_len + 1; i < codeword_len; i++) {
+        if (remainder[i] != 0) {
+            error_detected = 1;
+            break;
+        }
+    }
+    if (error_detected) {
+        printf("Error detected in the received codeword.\n");
+    } else {
+        printf("No error detected in the received codeword.\n");
+    }
+}
+int main() {
+    int data[DATA_BITS];
+    int divisor[] = {1, 0, 0, 1};
+    printf("Enter the data bits (7 bits): ");
+    for (int i = 0; i < DATA_BITS; i++) {
+        scanf("%d", &data[i]);
+    }
+    int divisor_len = sizeof(divisor) / sizeof(divisor[0]);
+    int codeword_len = DATA_BITS + divisor_len - 1;
+    crcEncode(data, divisor, DATA_BITS, divisor_len);
+    int codeword[codeword_len];
+    printf("Enter the received codeword (%d bits): ", codeword_len);
+    for (int i = 0; i < codeword_len; i++) {
+        scanf("%d", &codeword[i]);
+    }
+    crcDecode(codeword, divisor, codeword_len, divisor_len);
+
+    return 0;
+}

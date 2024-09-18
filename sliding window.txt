@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdbool.h>
+
+#define TOTAL_FRAMES 10
+#define WINDOW_SIZE 4
+
+int main() {
+    int frames[TOTAL_FRAMES];
+    int ack[TOTAL_FRAMES];
+    int send = 0;
+    int next_frame = 0;
+    int ack_count = 0;
+    int i;
+
+    for (i = 0; i < TOTAL_FRAMES; i++) {
+        frames[i] = i;
+        ack[i] = 0;
+    }
+
+    printf("Starting Sliding Window Protocol...\n");
+
+    while (ack_count < TOTAL_FRAMES) {
+        while (next_frame < TOTAL_FRAMES && next_frame < send + WINDOW_SIZE) {
+            printf("Sending frame %d\n", frames[next_frame]);
+            next_frame++;
+        }
+
+        for (i = send; i < next_frame; i++) {
+            if (ack[i] == 0) {
+                printf("Acknowledgment received for frame %d\n", frames[i]);
+                ack[i] = 1;
+                ack_count++;
+            }
+        }
+
+        while (send < TOTAL_FRAMES && ack[send] == 1) {
+            send++;
+        }
+
+        sleep(1);
+    }
+
+    printf("All frames sent and acknowledged.\n");
+    return 0;
+}
